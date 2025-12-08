@@ -149,6 +149,10 @@ select {
   transform: translate(-50%, -50%);
   z-index: 2;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #fff;
 }
 
 .goalie-home {

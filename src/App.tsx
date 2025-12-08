@@ -273,11 +273,15 @@ function App() {
             <div
               className="goalie goalie-home"
               style={{ left: `${homeGoalie.x * 100}%`, top: `${homeGoalie.y * 100}%` }}
-            />
+            >
+              G
+            </div>
             <div
               className="goalie goalie-away"
               style={{ left: `${awayGoalie.x * 100}%`, top: `${awayGoalie.y * 100}%` }}
-            />
+            >
+              G
+            </div>
             {home.map((p) => (
               <Player key={`home-${p.role}`} player={p} color="#2f9e44" />
             ))}
