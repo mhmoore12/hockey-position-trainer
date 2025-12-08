@@ -1,42 +1,218 @@
-#root {
-  max-width: 1280px;
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.bar h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.bar p {
+  margin: 0.25rem 0 0;
+  color: #d7e3f4;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.95rem;
+  color: #d7e3f4;
+}
+
+select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 0.4rem 0.75rem;
+  color: #f7fbff;
+  font-weight: 600;
+}
+
+.ghost {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  background: transparent;
+  color: #f7fbff;
+  padding: 0.45rem 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.ghost:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 1.25rem;
+}
+
+.board-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.rink {
+  position: relative;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12), transparent 35%),
+    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.08), transparent 32%),
+    #dfe9f5;
+  border: 2px solid #0d1b2a;
+  border-radius: 24px;
+  aspect-ratio: 1.4 / 1;
+  overflow: hidden;
+  min-height: 480px;
+}
+
+.rink::before,
+.rink::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+.rink-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.player {
+  position: absolute;
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  transition: left 200ms ease, top 200ms ease;
+}
+
+.puck {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #0b0b0b;
+  border-radius: 50%;
+  border: 2px solid #ffbe0b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 3;
+}
+
+.puck.active {
+  cursor: grabbing;
+  border-color: #ffd166;
+}
+
+.goalie {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.goalie-home {
+  background: linear-gradient(135deg, #74c69d, #2f9e44);
+}
+
+.goalie-away {
+  background: linear-gradient(135deg, #ff6b6b, #e03131);
+}
+
+.legend {
+  position: absolute;
+  bottom: 10px;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  color: #0d1b2a;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.legend-home {
+  left: 12px;
+}
+
+.legend-away {
+  right: 12px;
+}
+
+.info {
+  background: linear-gradient(145deg, rgba(10, 25, 47, 0.65), rgba(7, 18, 36, 0.78));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.info h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+.info ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #d9e4f5;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.note {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #9bb2d4;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
-  to {
-    transform: rotate(360deg);
+
+  .controls {
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
 }
