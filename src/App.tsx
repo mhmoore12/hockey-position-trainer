@@ -552,9 +552,8 @@ function App() {
               isDragging && updatePuckFromPointer(e.clientX, e.clientY)
             }
             onPointerDown={(e) => {
-              if ((e.target as HTMLElement).classList.contains("puck")) {
-                setIsDragging(true);
-              }
+              updatePuckFromPointer(e.clientX, e.clientY);
+              setIsDragging(true);
             }}
           >
             <RinkGraphic />
