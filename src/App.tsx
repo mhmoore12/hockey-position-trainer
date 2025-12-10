@@ -114,13 +114,14 @@ const strategyForLeftTeam = (
       const wingEntryX = clamp(puck.x + 0.04, 0.6, 0.78);
       const puckSideWing: PlayerRole = nearTop ? "LW" : "RW";
       const offWing: PlayerRole = puckSideWing === "LW" ? "RW" : "LW";
-      const puckSideLane = nearTop ? wingHighLane : wingLowLane;
-      const offLane = nearTop ? wingLowLane : wingHighLane;
 
       return {
         ...base,
-        [puckSideWing]: { x: wingEntryX, y: puckSideLane },
-        [offWing]: { x: wingEntryX - 0.05, y: offLane },
+        [puckSideWing]: {
+          x: clamp(puck.x, 0.55, 0.82),
+          y: clamp(puck.y, 0.1, 0.9),
+        },
+        [offWing]: { x: wingEntryX - 0.05, y: 0.5 },
         LD: { x: wingEntryX - 0.1, y: wingHighLane },
         RD: { x: wingEntryX - 0.1, y: wingLowLane },
       };
