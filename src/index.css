@@ -1,9 +1,17 @@
 :root {
+  --deep-navy: #0b2533;
+  --navy: #12394d;
+  --teal: #0fa3b1;
+  --aqua: #5ec8c2;
+  --gold: #f7e2a4;
+  --offwhite: #f8f8f4;
+  --shadow: rgba(0, 0, 0, 0.35);
+
   font-family: 'Barlow', 'Montserrat', 'Segoe UI', sans-serif;
   line-height: 1.6;
   font-weight: 500;
-  color: #f7fbff;
-  background-color: #071020;
+  color: var(--offwhite);
+  background-color: var(--deep-navy);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -12,9 +20,11 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, rgba(48, 119, 173, 0.25), transparent 35%),
-    radial-gradient(circle at 80% 10%, rgba(224, 71, 71, 0.2), transparent 30%),
-    linear-gradient(160deg, #081325, #0c1c32 50%, #050c1a);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(15, 163, 177, 0.28), transparent 38%),
+    radial-gradient(circle at 80% 15%, rgba(247, 226, 164, 0.22), transparent 35%),
+    radial-gradient(circle at 60% 70%, rgba(18, 57, 77, 0.38), transparent 45%),
+    linear-gradient(150deg, #0a1f2d 0%, #0b2533 40%, #0a1d29 100%);
 }
 
 #root {
