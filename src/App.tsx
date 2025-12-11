@@ -19,65 +19,58 @@ const nav = [
 
 function App() {
   const [page, setPage] = useState<PageKey>("trainer");
-  const [collapsed, setCollapsed] = useState(false);
+
+  const pathToPage = (path: string): PageKey => {
+    if (path.startsWith("/wrist")) return "wrist";
+    if (path.startsWith("/sticks")) return "sticks";
+    return "trainer";
+  };
+
+  const pageToPath = (p: PageKey) => {
+    if (p === "wrist") return "/wrist";
+    if (p === "sticks") return "/sticks";
+    return "/";
+  };
 
   useEffect(() => {
-    const applyHash = () => {
-      const hash = window.location.hash.replace("#", "");
-      if (hash === "wrist" || hash === "trainer" || hash === "sticks") {
-        setPage(hash);
-      }
+    const applyPath = () => {
+      const current = pathToPage(window.location.pathname);
+      setPage(current);
     };
-    applyHash();
-    window.addEventListener("hashchange", applyHash);
-    return () => window.removeEventListener("hashchange", applyHash);
+    applyPath();
+    window.addEventListener("popstate", applyPath);
+    return () => window.removeEventListener("popstate", applyPath);
   }, []);
 
   useEffect(() => {
-    if (window.location.hash.replace("#", "") !== page) {
-      window.location.hash = page;
+    const desired = pageToPath(page);
+    if (window.location.pathname !== desired) {
+      window.history.pushState({}, "", desired);
     }
   }, [page]);
 
   return (
     <div className="app-shell">
-      <header className={`top-nav ${collapsed ? "top-nav-collapsed" : ""}`}>
+      <header className="top-nav">
         <div className="brand">
           <img src={dragonLogo} alt="Euless 8U Dragons" className="logo-mark" />
           <div>
             <p className="eyebrow">Euless 8U Dragons</p>
-            <h2 className="brand-title">Skill lab</h2>
-            <p className="brand-subline">
-              Positioning, mechanics, and other information for Dragons in one
-              spot.
-            </p>
           </div>
         </div>
-        <div className="nav-actions">
-          <button
-            className="nav-toggle"
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
-          >
-            {collapsed ? "Expand" : "Collapse"}
-          </button>
-          {!collapsed && (
-            <nav className="nav-buttons">
-              {nav.map((item) => (
-                <button
-                  key={item.key}
-                  className={`nav-button ${
-                    page === item.key ? "nav-button-active" : ""
-                  }`}
-                  onClick={() => setPage(item.key)}
-                >
-                  <span>{item.label}</span>
-                  <small>{item.hint}</small>
-                </button>
-              ))}
-            </nav>
-          )}
-        </div>
+        <nav className="nav-buttons">
+          {nav.map((item) => (
+            <button
+              key={item.key}
+              className={`nav-button ${
+                page === item.key ? "nav-button-active" : ""
+              }`}
+              onClick={() => setPage(item.key)}
+            >
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </header>
 
       <main className="page-wrapper">

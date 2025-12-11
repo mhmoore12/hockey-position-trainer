@@ -18,6 +18,7 @@ type Pose = {
   lateral: number;
   puckTravel: number;
   puckLift: number;
+  puckPitch: number;
 };
 
 type ShotStage = {
@@ -58,6 +59,7 @@ const shotStages: ShotStage[] = [
       lateral: -0.1,
       puckTravel: 0.3,
       puckLift: -0.05,
+      puckPitch: 0,
     },
   },
   {
@@ -77,6 +79,7 @@ const shotStages: ShotStage[] = [
       lateral: -0.06,
       puckTravel: 0.25,
       puckLift: -0.1,
+      puckPitch: 0,
     },
   },
   {
@@ -97,6 +100,7 @@ const shotStages: ShotStage[] = [
       lateral: 0,
       puckTravel: 0.35,
       puckLift: -0.1,
+      puckPitch: 0,
     },
   },
   {
@@ -119,6 +123,7 @@ const shotStages: ShotStage[] = [
       lateral: -0.3,
       puckTravel: 0.3,
       puckLift: 0.08,
+      puckPitch: degToRad(60),
     },
   },
   {
@@ -138,6 +143,7 @@ const shotStages: ShotStage[] = [
       lateral: -0.8,
       puckTravel: 0.85,
       puckLift: 0.3,
+      puckPitch: degToRad(60),
     },
   },
 ];
@@ -638,6 +644,7 @@ const WristShot = () => {
       let yaw: number;
       let roll: number;
       let lateral: number;
+      let puckPitch: number;
       const baseBlend = (key: keyof Pose) => lerp(a[key], b[key], subT);
 
       if (subT <= k1) {
@@ -646,23 +653,27 @@ const WristShot = () => {
         yaw = lerp(a.yaw, degToRad(-10), local);
         roll = lerp(a.yaw, degToRad(0), local);
         lateral = lerp(a.lateral, 0.3, local);
+        puckPitch = lerp(a.pitch, degToRad(0), local);
       } else if (subT <= k2) {
         const local = (subT - k1) / (k2 - k1);
         pitch = lerp(degToRad(110), degToRad(70), local); // begin snap up
         yaw = lerp(degToRad(-10), degToRad(10), local);
         roll = lerp(degToRad(0), degToRad(15), local);
+        puckPitch = lerp(degToRad(0), degToRad(0), local);
         lateral = lerp(0.3, -2, local);
       } else if (subT <= k3) {
         const local = (subT - k2) / (k3 - k2);
         pitch = lerp(degToRad(70), degToRad(20), local);
         yaw = lerp(degToRad(10), degToRad(30), local);
         roll = lerp(degToRad(15), degToRad(20), local);
+        puckPitch = lerp(degToRad(0), degToRad(0), local);
         lateral = lerp(0.3, 0.3, local);
       } else {
         const local = (subT - k3) / (1 - k3);
         pitch = lerp(degToRad(20), degToRad(20), local);
         yaw = lerp(degToRad(20), degToRad(20), local);
         roll = lerp(degToRad(30), degToRad(60), local);
+        puckPitch = lerp(degToRad(0), degToRad(0), local);
         lateral = lerp(0.3, 0.3, local);
       }
 
@@ -690,6 +701,7 @@ const WristShot = () => {
         lateral: lateral,
         puckTravel,
         puckLift,
+        puckPitch,
       };
       return pose;
     }
@@ -704,6 +716,7 @@ const WristShot = () => {
       lateral: lerp(a.lateral, b.lateral, t),
       puckTravel: lerp(a.puckTravel, b.puckTravel, t),
       puckLift: lerp(a.puckLift, b.puckLift, t),
+      puckPitch: lerp(a.puckPitch, b.puckPitch, t),
     };
   }, []);
 
@@ -785,11 +798,12 @@ const WristShot = () => {
     );
 
     const pose = poseForValue(stageValue);
-    const puckModel = translate(identity(), [
+    let puckModel = translate(identity(), [
       pose.offset + pose.puckTravel,
       pose.lift + pose.puckLift,
       0,
     ]);
+    puckModel = rotateZ(puckModel, pose.puckPitch / 4);
     const puckOutline = scale(puckModel, [1.08, 1.08, 1.08]);
     gl.enable(gl.CULL_FACE);
     gl.depthMask(false);
