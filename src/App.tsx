@@ -24,7 +24,11 @@ function App() {
           {nav.map((item) => (
             <NavLink
               key={item.key}
-              to={item.key === "trainer" ? "/" : `/${item.key === "sticks" ? "sticks" : "wrist"}`}
+              to={
+                item.key === "trainer"
+                  ? "/"
+                  : `/${item.key === "sticks" ? "sticks" : "wrist"}`
+              }
               className={({ isActive }) =>
                 `nav-button ${isActive ? "nav-button-active" : ""}`
               }
