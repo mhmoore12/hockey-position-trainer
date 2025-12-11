@@ -19,6 +19,7 @@ const nav = [
 
 function App() {
   const [page, setPage] = useState<PageKey>("trainer");
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const applyHash = () => {
@@ -40,7 +41,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <header className="top-nav">
+      <header className={`top-nav ${collapsed ? "top-nav-collapsed" : ""}`}>
         <div className="brand">
           <img src={dragonLogo} alt="Euless 8U Dragons" className="logo-mark" />
           <div>
@@ -52,20 +53,31 @@ function App() {
             </p>
           </div>
         </div>
-        <nav className="nav-buttons">
-          {nav.map((item) => (
-            <button
-              key={item.key}
-              className={`nav-button ${
-                page === item.key ? "nav-button-active" : ""
-              }`}
-              onClick={() => setPage(item.key)}
-            >
-              <span>{item.label}</span>
-              <small>{item.hint}</small>
-            </button>
-          ))}
-        </nav>
+        <div className="nav-actions">
+          <button
+            className="nav-toggle"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+          >
+            {collapsed ? "Expand" : "Collapse"}
+          </button>
+          {!collapsed && (
+            <nav className="nav-buttons">
+              {nav.map((item) => (
+                <button
+                  key={item.key}
+                  className={`nav-button ${
+                    page === item.key ? "nav-button-active" : ""
+                  }`}
+                  onClick={() => setPage(item.key)}
+                >
+                  <span>{item.label}</span>
+                  <small>{item.hint}</small>
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
       </header>
 
       <main className="page-wrapper">

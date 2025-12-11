@@ -48,6 +48,29 @@
   justify-content: flex-end;
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nav-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7fbff;
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nav-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.top-nav-collapsed .nav-buttons {
+  display: none;
+}
 .nav-button {
   background: rgba(255, 255, 255, 0.06);
   color: #f7fbff;
@@ -588,8 +611,9 @@ input[type="range"] {
 
 .shot-canvas {
   width: 100%;
-  height: clamp(260px, 50vw, 380px);
+  height: clamp(260px, 60vw, 420px);
   display: block;
+  max-width: 100%;
 }
 
 .canvas-caption {
