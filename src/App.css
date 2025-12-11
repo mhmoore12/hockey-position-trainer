@@ -90,10 +90,12 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.35rem;
-  max-width: 1800px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
 }
 
 .page-hero {
@@ -190,10 +192,13 @@ select {
   padding: 1rem;
   box-shadow: 0 10px 40px var(--shadow);
   grid-column: 2 / 3;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .rink {
   position: relative;
+  width: 100%;
   background: radial-gradient(
       circle at 50% 30%,
       rgba(255, 255, 255, 0.12),
@@ -583,7 +588,7 @@ input[type="range"] {
 
 .shot-canvas {
   width: 100%;
-  height: 380px;
+  height: clamp(260px, 50vw, 380px);
   display: block;
 }
 
@@ -700,6 +705,15 @@ input[type="range"] {
     padding: 1rem;
   }
 
+  .wrist-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "video"
+      "hero"
+      "graphic"
+      "info";
+  }
+
   .shot-canvas {
     height: 320px;
   }
@@ -718,7 +732,7 @@ input[type="range"] {
   }
 
   .stage-mark {
-    width: 96px;
+    width: 82px;
     font-size: 0.8rem;
   }
 }
