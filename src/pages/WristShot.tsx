@@ -470,15 +470,87 @@ const bladeGeometry = (): number[] => {
 
 const bladeFrontFaceGeometry = (): number[] => {
   const halfLength = 0.9;
-  const height = 0.07;
-  const depth = 0.06;
+  const height = 0.04;
+  const depth = 0.07;
+  const segments = 16;
+  const curveDrop = 0.1;
+  const k = 4;
+  const verts: number[] = [];
+
+  const yAt = (t: number) =>
+    -height - curveDrop * (Math.log(1 + k * t) / Math.log(1 + k));
+
+  for (let i = 0; i < segments; i += 1) {
+    const t0 = i / segments;
+    const t1 = (i + 1) / segments;
+    const x0 = -halfLength + 2 * halfLength * t0;
+    const x1 = -halfLength + 2 * halfLength * t1;
+    const y0 = yAt(t0);
+    const y1 = yAt(t1);
+
+    const a = [x0, y0, -depth];
+    const b = [x1, y1, -depth];
+    const c = [x1, y1, depth];
+    const d = [x0, y0, depth];
+    verts.push(...a, ...b, ...c, ...a, ...c, ...d);
+  }
+
+  return verts;
+};
+
+const shaftGeometry = (): number[] => {
+  const halfW = 0.25;
+  const halfD = 0.1;
+  const halfL = 0.025;
+  const xSkew = 5;
   const p = [
-    [-halfLength, -height, depth],
-    [halfLength, -height, depth],
-    [halfLength, -height, -depth],
-    [-halfLength, -height, -depth],
+    [-halfW, -halfL, halfD + 0.04],
+    [halfW, -halfL, halfD],
+    [halfW, halfL, halfD],
+    [-halfW, halfL, halfD],
+    [-halfW + xSkew, -halfL, -halfD],
+    [halfW + xSkew, -halfL, -halfD],
+    [halfW + xSkew, halfL, -halfD],
+    [-halfW + xSkew, halfL, -halfD],
   ];
-  return [...p[0], ...p[1], ...p[2], ...p[0], ...p[2], ...p[3]];
+  return [
+    ...p[0],
+    ...p[1],
+    ...p[2],
+    ...p[0],
+    ...p[2],
+    ...p[3], // front
+    ...p[5],
+    ...p[4],
+    ...p[7],
+    ...p[5],
+    ...p[7],
+    ...p[6], // back
+    ...p[3],
+    ...p[2],
+    ...p[6],
+    ...p[3],
+    ...p[6],
+    ...p[7], // top
+    ...p[4],
+    ...p[5],
+    ...p[1],
+    ...p[4],
+    ...p[1],
+    ...p[0], // bottom
+    ...p[1],
+    ...p[5],
+    ...p[6],
+    ...p[1],
+    ...p[6],
+    ...p[2], // side
+    ...p[4],
+    ...p[0],
+    ...p[3],
+    ...p[4],
+    ...p[3],
+    ...p[7], // side
+  ];
 };
 
 const puckGeometry = (): number[] => {
@@ -589,6 +661,7 @@ const WristShot = () => {
   const puckMeshRef = useRef<Mesh | null>(null);
   const bladeMeshRef = useRef<Mesh | null>(null);
   const bladeFrontMeshRef = useRef<Mesh | null>(null);
+  const shaftMeshRef = useRef<Mesh | null>(null);
   const floorMeshRef = useRef<Mesh | null>(null);
   const centerLineMeshRef = useRef<Mesh | null>(null);
   const spotlightMeshRef = useRef<Mesh | null>(null);
@@ -735,6 +808,7 @@ const WristShot = () => {
       !puckMeshRef.current ||
       !bladeMeshRef.current ||
       !bladeFrontMeshRef.current ||
+      !shaftMeshRef.current ||
       !floorMeshRef.current ||
       !centerLineMeshRef.current ||
       !spotlightMeshRef.current
@@ -828,7 +902,7 @@ const WristShot = () => {
     bladeModel = rotateZ(bladeModel, pose.pitch);
     bladeModel = rotateY(bladeModel, pose.roll);
     bladeModel = rotateX(bladeModel, pose.yaw);
-    bladeModel = scale(bladeModel, [0.2, 0.25 + pose.bend * 0.4, 6.2]);
+    bladeModel = scale(bladeModel, [0.2, 0.35 + pose.bend * 0.4, 6.2]);
     setUniformsAndDraw(bladeModel, [0.86, 0.68, 0.32], bladeMeshRef.current);
     const bladeFront = translate(bladeModel, [0, 0, -0.005]);
     setUniformsAndDraw(
@@ -836,8 +910,14 @@ const WristShot = () => {
       [0.78, 0.95, 0.78],
       bladeFrontMeshRef.current
     );
+    let shaftModel = multiply(
+      bladeModel,
+      translate(identity(), [-0.85, 0.0, -0.12])
+    );
+    shaftModel = rotateX(shaftModel, degToRad(-45));
+    setUniformsAndDraw(shaftModel, [0.86, 0.68, 0.32], shaftMeshRef.current);
     const bladeShadow = scale(
-      translate(identity(), [pose.offset, -0.2, pose.lateral]),
+      translate(identity(), [pose.offset, -0.4, pose.lateral]),
       [0.2, 0.02, 6.2]
     );
     let bladeShadowRot = rotateZ(bladeShadow, pose.pitch);
@@ -906,6 +986,7 @@ const WristShot = () => {
     puckMeshRef.current = createMesh(gl, puckGeometry());
     bladeMeshRef.current = createMesh(gl, bladeGeometry());
     bladeFrontMeshRef.current = createMesh(gl, bladeFrontFaceGeometry());
+    shaftMeshRef.current = createMesh(gl, shaftGeometry());
     floorMeshRef.current = createMesh(gl, floorGeometry());
     centerLineMeshRef.current = createMesh(gl, centerLineGeometry());
     spotlightMeshRef.current = createMesh(gl, spotlightGeometry());
