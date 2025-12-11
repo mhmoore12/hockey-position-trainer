@@ -1,7 +1,6 @@
 import {
   useCallback,
-  useEffect,
-  memo,
+  useEffect,  
   useMemo,
   useRef,
   useState,
@@ -270,22 +269,6 @@ const rotateZ = (m: Float32Array, rad: number): Float32Array => {
   return multiply(m, r);
 };
 
-const perspective = (
-  fov: number,
-  aspect: number,
-  near: number,
-  far: number
-): Float32Array => {
-  const f = 1.0 / Math.tan(fov / 2);
-  const nf = 1 / (near - far);
-  const out = new Float32Array(16);
-  out[0] = f / aspect;
-  out[5] = f;
-  out[10] = (far + near) * nf;
-  out[11] = -1;
-  out[14] = 2 * far * near * nf;
-  return out;
-};
 
 const orthographic = (
   left: number,
