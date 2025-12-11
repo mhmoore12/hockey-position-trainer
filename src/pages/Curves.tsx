@@ -8,7 +8,8 @@ const CurvesPage = () => {
           <p className="eyebrow">Hockey Sticks</p>
           <h1>Stick information: materials, curves, options</h1>
           <p className="hero-subline">
-            Christmas is coming up and a stick is always a great gift! I've added some thoughts and recommendations below.
+            Christmas is coming up and a stick is always a great gift! I've
+            added some thoughts and recommendations below.
           </p>
         </div>
       </header>
@@ -50,9 +51,12 @@ const CurvesPage = () => {
           <p className="hero-subline">
             The two most popular retail curves. P28 is toe-centric and rewards
             quick puck pickups and snap releases; P92 is a mid-curve all-rounder
-            with a larger sweet spot. *NOTE:* These are specific to Bauer
-            products. Other manufactures make similar or copycat curves.
+            with a larger sweet spot.
           </p>
+          <div className="note">
+            These are specific to Bauer products. Other manufactures make
+            similar or copycat curves.
+          </div>
           <table className="spec-table">
             <thead>
               <tr>
@@ -103,8 +107,8 @@ const CurvesPage = () => {
               </tr>
             </tbody>
           </table>
-          <p className="hero-subline" style={{ fontWeight: 800 }}>
-            Quick note: the P28 is the easiest curve to get lift in tight
+          <p className="hero-subline">
+            Quick note: the P28 is the easiest curve to lift the puck with
             because of its toe pocket and open loft.
           </p>
         </section>

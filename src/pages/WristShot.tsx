@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  memo,
   useMemo,
   useRef,
   useState,
@@ -52,7 +53,7 @@ const shotStages: ShotStage[] = [
       pitch: degToRad(45),
       roll: -0.3,
       offset: -1.5,
-      lift: 0.02,
+      lift: -0.03,
       bend: 0.18,
       lateral: -0.1,
       puckTravel: 0.3,
@@ -79,7 +80,7 @@ const shotStages: ShotStage[] = [
     },
   },
   {
-    title: "Open the blade",
+    title: "Open the blade (lift the puck)",
     body: "As you start to pull, the wrists roll to open the blade. The puck moves toward the mid-blade with a small lift.",
     cues: [
       "Top hand steers back; bottom hand eases up so the blade can open.",
@@ -88,7 +89,7 @@ const shotStages: ShotStage[] = [
     ],
     pose: {
       yaw: 0,
-      pitch: degToRad(90),
+      pitch: degToRad(110),
       roll: 0,
       offset: 0,
       lift: 0.05,
@@ -99,24 +100,44 @@ const shotStages: ShotStage[] = [
     },
   },
   {
-    title: "Pull, push, snap, flick",
+    title: "Snap, flick",
     body: "Top hand pulls back, bottom hand pushes through. The blade closes slightly through impact for the quick 'flick'.",
     cues: [
       "Hands finish out in front of the body with the blade finishing toward the target.",
       "Weight transfers to the front foot as the puck rolls from heel to toe.",
-      "'Snap' quickly on the puck to catch up to it before the 'flick'",
+      "'Snap' quickly on the puck to catch up to it before the 'flick'. The 'snap' is our lifting action and the 'flick' is our aiming action.",
       "The 'snap' to 'flick' transition should be smooth and quick - you can start doing it slow, but the quicker this transition is, the more power and lift you will have.",
+      "The 'flick' also determines how high and what direction the puck will ultimately go. If done correctly, where you point the toe of your stick is where the puck will travel.",
     ],
     pose: {
-      yaw: 0,
-      pitch: degToRad(140),
-      roll: 0,
-      offset: 1,
+      yaw: 0.1,
+      pitch: degToRad(60),
+      roll: 0.1,
+      offset: 1.4,
       lift: 0.5,
       bend: 0.12,
       lateral: -0.3,
       puckTravel: 0.3,
       puckLift: 0.08,
+    },
+  },
+  {
+    title: "Follow through",
+    body: "Blade turns over and finishes toward the target; the puck continues its path.",
+    cues: [
+      "Chest and shoulders finish facing the target; blade rolls over to close the face.",
+      "Arms extend to full reach, finishing high to guide puck trajectory.",
+    ],
+    pose: {
+      yaw: degToRad(20),
+      pitch: degToRad(20),
+      roll: degToRad(60),
+      offset: 2.25,
+      lift: 0.7,
+      bend: 0.05,
+      lateral: -0.8,
+      puckTravel: 0.85,
+      puckLift: 0.3,
     },
   },
 ];
@@ -577,6 +598,7 @@ const WristShot = () => {
   const lastXRef = useRef(0);
   const lastYRef = useRef(0);
   const playRaf = useRef<number | null>(null);
+  const sliderRaf = useRef<number | null>(null);
 
   const activeStageIndex = useMemo(
     () => Math.round(clamp(stageValue, 0, shotStages.length - 1)),
@@ -606,15 +628,16 @@ const WristShot = () => {
     const b = shotStages[endIndex].pose;
     if (t === 0) return a;
     // Custom release motion between stage 3 (open) and stage 4 (flick)
-    if (startIndex === 2 && endIndex === 3) {
+    if (startIndex === 2 && endIndex === 4) {
       const subT = t;
       // Keyframes: 0 -> -10deg, 0.5 lift by 0.5, 0.7 -> +50deg (upright = 90deg)
-      const k1 = 0.1;
-      const k2 = 0.6;
-      const k3 = 0.99;
+      const k1 = 0.01;
+      const k2 = 0.1;
+      const k3 = 0.4;
       let pitch: number;
       let yaw: number;
       let roll: number;
+      let lateral: number;
       const baseBlend = (key: keyof Pose) => lerp(a[key], b[key], subT);
 
       if (subT <= k1) {
@@ -622,21 +645,25 @@ const WristShot = () => {
         pitch = lerp(a.pitch, degToRad(110), local);
         yaw = lerp(a.yaw, degToRad(-10), local);
         roll = lerp(a.yaw, degToRad(0), local);
+        lateral = lerp(a.lateral, 0.3, local);
       } else if (subT <= k2) {
         const local = (subT - k1) / (k2 - k1);
         pitch = lerp(degToRad(110), degToRad(70), local); // begin snap up
         yaw = lerp(degToRad(-10), degToRad(10), local);
         roll = lerp(degToRad(0), degToRad(15), local);
+        lateral = lerp(0.3, -2, local);
       } else if (subT <= k3) {
         const local = (subT - k2) / (k3 - k2);
         pitch = lerp(degToRad(70), degToRad(20), local);
         yaw = lerp(degToRad(10), degToRad(30), local);
         roll = lerp(degToRad(15), degToRad(20), local);
+        lateral = lerp(0.3, 0.3, local);
       } else {
         const local = (subT - k3) / (1 - k3);
         pitch = lerp(degToRad(20), degToRad(20), local);
         yaw = lerp(degToRad(20), degToRad(20), local);
         roll = lerp(degToRad(30), degToRad(60), local);
+        lateral = lerp(0.3, 0.3, local);
       }
 
       const lift =
@@ -660,7 +687,7 @@ const WristShot = () => {
         offset: baseBlend("offset"),
         lift,
         bend: baseBlend("bend"),
-        lateral: baseBlend("lateral"),
+        lateral: lateral,
         puckTravel,
         puckLift,
       };
@@ -743,7 +770,7 @@ const WristShot = () => {
     };
 
     const floorModel = translate(identity(), [0, -0.2, 0]);
-    setUniformsAndDraw(floorModel, [1, 1, 1], floorMeshRef.current);
+    setUniformsAndDraw(floorModel, [0.85, 0.92, 0.98], floorMeshRef.current);
     const spotlightModel = translate(identity(), [0, -0.449, 0]);
     setUniformsAndDraw(
       spotlightModel,
@@ -761,7 +788,7 @@ const WristShot = () => {
     const puckModel = translate(identity(), [
       pose.offset + pose.puckTravel,
       pose.lift + pose.puckLift,
-      pose.lateral,
+      0,
     ]);
     const puckOutline = scale(puckModel, [1.08, 1.08, 1.08]);
     gl.enable(gl.CULL_FACE);
@@ -771,11 +798,11 @@ const WristShot = () => {
     gl.cullFace(gl.BACK);
     gl.disable(gl.CULL_FACE);
     gl.depthMask(true);
-    setUniformsAndDraw(puckModel, [0.06, 0.06, 0.1], puckMeshRef.current);
+    setUniformsAndDraw(puckModel, [0.27, 0.27, 0.3], puckMeshRef.current);
     const puckShadow = scale(
       translate(identity(), [
         pose.offset + pose.puckTravel,
-        -0.449,
+        -0.2,
         pose.lateral,
       ]),
       [1, 0.05, 1]
@@ -796,10 +823,13 @@ const WristShot = () => {
       bladeFrontMeshRef.current
     );
     const bladeShadow = scale(
-      translate(identity(), [pose.offset, -0.449, pose.lateral]),
+      translate(identity(), [pose.offset, -0.2, pose.lateral]),
       [0.2, 0.02, 6.2]
     );
-    const bladeShadowRot = rotateZ(bladeShadow, pose.pitch);
+    let bladeShadowRot = rotateZ(bladeShadow, pose.pitch);
+    bladeShadowRot = rotateX(bladeShadowRot, pose.roll * -1);
+    bladeShadowRot = rotateY(bladeShadowRot, pose.yaw);
+
     setUniformsAndDraw(bladeShadowRot, [0, 0, 0, 0.16], bladeMeshRef.current);
   }, [azimuth, elevation, poseForValue, stageValue]);
 
@@ -825,8 +855,22 @@ const WristShot = () => {
       uniform vec4 uColor;
       varying vec3 vPosition;
       void main() {
-        float shade = 0.5 + 0.45 * clamp((vPosition.y + 1.4) / 2.8, 0.0, 1.0);
-        gl_FragColor = vec4(uColor.rgb * shade, uColor.a);
+        // Approx normals from position for simple lighting
+        vec3 normalHint = normalize(vec3(vPosition.x * 0.35, 1.0, vPosition.z * 0.35));
+        vec3 lightDir = normalize(vec3(0.3, 1.0, 0.2));
+        vec3 viewDir = normalize(vec3(0.0, 1.0, 0.6));
+        vec3 halfV = normalize(lightDir + viewDir);
+
+        float ndl = clamp(dot(normalHint, lightDir), 0.0, 1.0);
+        float diffuse = 0.25 + 0.75 * ndl;
+
+        float spec = pow(max(dot(normalHint, halfV), 0.0), 32.0);
+        // Heavier spec for ice-like colors (bright, high alpha)
+        float baseSpec = mix(0.15, 0.55, step(0.9, uColor.a) * step(0.8, (uColor.r + uColor.g + uColor.b) / 3.0));
+        float rim = pow(1.0 - max(dot(normalHint, viewDir), 0.0), 2.5) * 0.15;
+
+        vec3 color = uColor.rgb * diffuse + spec * baseSpec + rim;
+        gl_FragColor = vec4(color, uColor.a);
       }
     `;
 
@@ -898,6 +942,13 @@ const WristShot = () => {
     const next = clamp01(radius + e.deltaY * 0.002, 1.5, 5);
     setRadius(next);
   };
+
+  const handleSliderChange = (v: number) => {
+    if (sliderRaf.current) cancelAnimationFrame(sliderRaf.current);
+    sliderRaf.current = requestAnimationFrame(() => {
+      startTransition(() => setStageValue(v));
+    });
+  };
   const stopOrbit = () => setIsOrbiting(false);
 
   useEffect(() => {
@@ -907,12 +958,20 @@ const WristShot = () => {
       return;
     }
     let last = performance.now();
+    let endPause = 0;
     const step = (now: number) => {
       const dt = (now - last) / 1000;
       last = now;
       setStageValue((prev) => {
+        if (prev >= shotStages.length - 1) {
+          endPause += dt;
+          if (endPause >= 2) {
+            endPause = 0;
+            return 0;
+          }
+          return prev;
+        }
         const next = prev + dt * playbackSpeed * 1; // 1 unit per second at 1x
-        if (next > shotStages.length - 1) return 0;
         return next;
       });
       playRaf.current = requestAnimationFrame(step);
@@ -980,11 +1039,7 @@ const WristShot = () => {
                 max={shotStages.length - 1.02}
                 step={0.01}
                 value={stageValue}
-                onChange={(e) =>
-                  startTransition(() =>
-                    setStageValue(parseFloat(e.target.value))
-                  )
-                }
+                onChange={(e) => handleSliderChange(parseFloat(e.target.value))}
               />
             </label>
             <div className="stage-marks">
@@ -1008,10 +1063,6 @@ const WristShot = () => {
           <p className="eyebrow">
             Stage {activeStageIndex + 1} of {shotStages.length}
           </p>
-          <p>
-            So much of what makes a wrist shot pwoerful and get off the ice is
-            about the angle of the blade throughout the shot. This{" "}
-          </p>
           <h3>{activeStage.title}</h3>
           <p className="hero-subline">{activeStage.body}</p>
           <ul className="cues">
@@ -1019,10 +1070,7 @@ const WristShot = () => {
               <li key={cue}>{cue}</li>
             ))}
           </ul>
-          <div className="note">
-            Drag horizontally on the 3D view to orbit the camera around the
-            puck.
-          </div>
+          <div className="note">Drag the 3D view to move the camera.</div>
         </section>
 
         <section className="shot-visual">
@@ -1049,7 +1097,7 @@ const WristShot = () => {
             <div className="canvas-caption">
               <span>Blade angle to puck</span>
               <span className="chip chip-neutral">
-                Orbit to inspect the release
+                Drag the mouse to see it from other angles
               </span>
             </div>
           </div>

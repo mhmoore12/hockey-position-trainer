@@ -90,7 +90,7 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.35rem;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -480,6 +480,13 @@ input[type="range"] {
 
 .wrist-stage-card {
   grid-area: info;
+  min-height: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.wrist-stage-card .cues {
+  flex: 1;
 }
 .slider-card {
   align-self: flex-end !important;
