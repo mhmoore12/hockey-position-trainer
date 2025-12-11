@@ -194,8 +194,16 @@ select {
 
 .rink {
   position: relative;
-  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12), transparent 35%),
-    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.08), transparent 32%),
+  background: radial-gradient(
+      circle at 50% 30%,
+      rgba(255, 255, 255, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 20% 80%,
+      rgba(255, 255, 255, 0.08),
+      transparent 32%
+    ),
     #dfe9f5;
   border: 2px solid #0d1b2a;
   border-radius: 24px;
@@ -206,7 +214,7 @@ select {
 
 .rink::before,
 .rink::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 8px;
   border-radius: 20px;
@@ -299,7 +307,11 @@ select {
 }
 
 .info {
-  background: linear-gradient(145deg, rgba(10, 25, 47, 0.65), rgba(7, 18, 36, 0.78));
+  background: linear-gradient(
+    145deg,
+    rgba(10, 25, 47, 0.65),
+    rgba(7, 18, 36, 0.78)
+  );
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 1rem 1.25rem;
@@ -379,11 +391,7 @@ select {
 
 .slider-block {
   min-width: 280px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 0.85rem 1rem;
-  box-shadow: 0 8px 20px var(--shadow);
+  padding: 0.85rem 3rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -438,13 +446,47 @@ input[type="range"] {
 
 .wrist-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(0, 1.4fr);
-  gap: 1.35rem;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+  grid-template-areas:
+    "video hero"
+    "info graphic";
+  column-gap: 3.5rem;
+  row-gap: 1rem;
   align-items: stretch;
 }
 
 .curves-page .wrist-layout {
   grid-template-columns: 1fr;
+  grid-template-areas: unset;
+}
+
+.wrist-page .wrist-layout {
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+  grid-template-areas:
+    "video hero"
+    "info graphic";
+  align-items: flex-start;
+}
+
+.video-card {
+  grid-area: video;
+  height: 100%;
+  padding-bottom: 2rem !important;
+}
+
+.hero-card {
+  grid-area: hero;
+}
+
+.wrist-stage-card {
+  grid-area: info;
+}
+.slider-card {
+  align-self: flex-end !important;
+}
+
+.shot-visual {
+  grid-area: graphic;
 }
 
 .stage-card {
@@ -454,6 +496,21 @@ input[type="range"] {
   padding: 1rem 1.25rem;
   box-shadow: 0 8px 26px var(--shadow);
   width: 100%;
+}
+
+.video-embed {
+  position: relative;
+  padding-top: 50%;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px var(--shadow);
+  background: #0c1625;
+}
+
+.video-embed iframe {
+  position: absolute;
+  inset: 0;
 }
 
 .stage-card h3 {
@@ -503,9 +560,16 @@ input[type="range"] {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(94, 200, 194, 0.16), transparent 45%),
-    radial-gradient(circle at 80% 65%, rgba(247, 226, 164, 0.16), transparent 50%),
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(94, 200, 194, 0.16),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 80% 65%,
+      rgba(247, 226, 164, 0.16),
+      transparent 50%
+    ),
     #0c1f2e;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -524,7 +588,11 @@ input[type="range"] {
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.45) 60%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.45) 60%
+  );
   color: #dfe9f5;
   font-weight: 700;
 }
@@ -549,6 +617,36 @@ input[type="range"] {
 }
 
 .view-btn:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.playback-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.speed-toggle {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.speed-btn {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #eaf3ff;
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.speed-btn-active {
+  background: var(--gold);
+  color: #0c1627;
   border-color: rgba(255, 255, 255, 0.4);
 }
 
@@ -593,10 +691,6 @@ input[type="range"] {
 
   .page {
     padding: 1rem;
-  }
-
-  .wrist-layout {
-    grid-template-columns: 1fr;
   }
 
   .shot-canvas {
