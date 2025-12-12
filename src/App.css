@@ -52,6 +52,7 @@
   width: auto;
   min-width: 0;
   margin: 0;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
 }
 
 .nav-actions {
@@ -703,16 +704,47 @@ input[type="range"] {
   .top-nav {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.6rem;
-    margin: 1rem;
+    gap: 0.4rem;
+    margin: 0.6rem 0.8rem;
+    padding: 0.8rem;
+  }
+
+  .nav-actions-mobile {
+    display: block;
+    width: 100%;
+  }
+
+  .brand {
+    gap: 0.5rem;
+  }
+
+  .logo-mark {
+    width: 62px;
   }
 
   .nav-buttons {
     width: 100%;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .nav-buttons.nav-open {
+    max-height: 500px;
+    opacity: 1;
+    margin-top: 0.25rem;
   }
 
   .nav-button {
     width: 100%;
+    padding: 0.45rem 0.65rem;
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+
+  .nav-toggle {
+    padding: 0.35rem 0.6rem;
+    font-size: 1rem;
   }
 
   .page-wrapper {
@@ -752,6 +784,17 @@ input[type="range"] {
       "info";
     column-gap: 1rem;
     row-gap: 1rem;
+  }
+
+  /* Force single column even when wrist-page overrides are present */
+  .wrist-page .wrist-layout,
+  .curves-page .wrist-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "video"
+      "hero"
+      "graphic"
+      "info";
   }
 
   .shot-canvas {
