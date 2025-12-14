@@ -96,13 +96,26 @@ const StatsBoard = () => {
         ),
     [players]
   );
+  const hideBenchTurns = eligibleSkaters.length <= 8 && eligibleSkaters.length > 0;
 
   const suggestedBench = useMemo(() => {
-    if (!eligibleSkaters.length) return [];
+    if (!eligibleSkaters.length || eligibleSkaters.length === 8 || eligibleSkaters.length === 7)
+      return [];
     const minBenches = Math.min(...eligibleSkaters.map(([, p]) => p.benchCount));
     return eligibleSkaters
       .filter(([, p]) => p.benchCount === minBenches)
       .map(([name]) => name);
+  }, [eligibleSkaters]);
+
+  const extraShiftNext = useMemo(() => {
+    const skaterCount = eligibleSkaters.length;
+    if (skaterCount === 0 || skaterCount > 7 || skaterCount === 8) return [];
+    const sorted = [...eligibleSkaters].sort(
+      ([, a], [, b]) => a.benchCount - b.benchCount || tierValue[a.tier] - tierValue[b.tier]
+    );
+    // pick top 2 to double-shift if only 7 skaters, top 1 if 6
+    const take = skaterCount >= 7 ? 2 : 1;
+    return sorted.slice(0, take).map(([name]) => name);
   }, [eligibleSkaters]);
 
   const setPlayer = (name: string, updater: (row: PlayerRow) => PlayerRow) => {
@@ -302,6 +315,9 @@ const StatsBoard = () => {
         buckets[line].push(name);
       }
     });
+    const presentNames = roster.filter((r) => players[r.name].present).map((r) => r.name);
+    const notPresent = roster.filter((r) => !players[r.name].present).map((r) => r.name);
+    buckets.none = [...buckets.none.filter((n) => presentNames.includes(n)), ...notPresent];
     return buckets;
   }, [players]);
 
@@ -322,30 +338,32 @@ const StatsBoard = () => {
             disabled={!row.present}
           />
         </span>
-        <span>
-          <select
-            value={row.line}
-            onChange={(e) => setLine(name, e.target.value as LineSlot)}
-            disabled={!row.present || row.goalie}
-          >
-            <option value="none">None</option>
-            <option value="line1">Line 1</option>
-            <option value="line2">Line 2</option>
-            <option value="bench">Bench</option>
-          </select>
-        </span>
-        <span className="counter">
-          <button onClick={() => bump(name, "benchCount", -1)} disabled={row.benchCount === 0}>
-            -
-          </button>
-          <span>{row.benchCount}</span>
-          <button onClick={() => bump(name, "benchCount", 1)}>+ Bench</button>
-        </span>
-        <span className="counter">
-          <button onClick={() => bump(name, "sog", -1)} disabled={row.sog === 0}>
-            -
-          </button>
-          <span>{row.sog}</span>
+          <span>
+            <select
+              value={row.line}
+              onChange={(e) => setLine(name, e.target.value as LineSlot)}
+              disabled={!row.present || row.goalie}
+            >
+              <option value="none">None</option>
+              <option value="line1">Line 1</option>
+              <option value="line2">Line 2</option>
+              <option value="bench">Bench</option>
+            </select>
+          </span>
+          {!hideBenchTurns && (
+            <span className="counter">
+              <button onClick={() => bump(name, "benchCount", -1)} disabled={row.benchCount === 0}>
+                -
+              </button>
+              <span>{row.benchCount}</span>
+              <button onClick={() => bump(name, "benchCount", 1)}>+ Bench</button>
+            </span>
+          )}
+          <span className="counter">
+            <button onClick={() => bump(name, "sog", -1)} disabled={row.sog === 0}>
+              -
+            </button>
+            <span>{row.sog}</span>
           <button onClick={() => bump(name, "sog", 1)}>+</button>
         </span>
         <span className="counter">
@@ -413,6 +431,11 @@ const StatsBoard = () => {
         <div>
           <strong>Goalie:</strong> {goalie ?? "None set"}
         </div>
+        {extraShiftNext.length > 0 && (
+          <div>
+            <strong>Extra shift:</strong> {extraShiftNext.join(", ")}
+          </div>
+        )}
         <div className="scoreboard inline-score">
           <div className="score-chip">
             <span className="score-label">Us</span>
@@ -461,14 +484,21 @@ const StatsBoard = () => {
           <span>Here</span>
           <span>Goalie</span>
           <span>Line</span>
-          <span>Bench turns</span>
+          {!hideBenchTurns && <span>Bench turns</span>}
           <span>SOG</span>
           <span>G</span>
           <span>A</span>
           <span>GA/SvA</span>
         </div>
-        {(["line1", "line2", "bench", "none", "goalie"] as (LineSlot | "goalie")[]).map(
-          (lineKey) => (
+        {(
+          [
+            "line1",
+            "line2",
+            ...(grouped.bench.length ? (["bench"] as const) : []),
+            "goalie",
+            "none",
+          ] as (LineSlot | "goalie")[]
+        ).map((lineKey) => (
           <div key={lineKey}>
             <div className="stats-group-title">
               {lineKey === "line1"

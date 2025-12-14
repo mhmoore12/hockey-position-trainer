@@ -434,7 +434,7 @@ select {
 }
 
 .counter button {
-  padding: 0.15rem 0.45rem;
+  padding: 0.18rem 0.6rem;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
@@ -551,7 +551,7 @@ select {
 }
 
 .score-mini-btns button {
-  padding: 0.18rem 0.25rem;
+  padding: 0.18rem 0.38rem;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
