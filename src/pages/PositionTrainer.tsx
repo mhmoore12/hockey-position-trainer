@@ -60,7 +60,32 @@ const strategyForLeftTeam = (
     !inOffense && !inDefense && (puck.y < 0.33 || puck.y > 0.67);
 
   if (!inOffense && !inDefense && !neutralBoard) {
-    return base;
+    const puckSideWing: PlayerRole = nearTop ? "LW" : "RW";
+    const supportWing: PlayerRole = puckSideWing === "LW" ? "RW" : "LW";
+    const isRightLane = puck.y >= 0.5;
+    const wingLaneY =
+      puckSideWing === "LW"
+        ? clamp(puck.y, 0.22, 0.48)
+        : clamp(puck.y, 0.52, 0.78);
+    const supportY =
+      puckSideWing === "RW" && isRightLane
+        ? 0.41 // halfway between center (~0.5) and boards (~0.33) for LW support when puck right
+        : supportWing === "LW"
+        ? 0.32
+        : 0.68;
+    return {
+      ...base,
+      [puckSideWing]: {
+        x: clamp(puck.x + 0.015, 0.46, 0.58),
+        y: wingLaneY,
+      },
+      [supportWing]: {
+        x: 0.62,
+        y: supportY,
+      },
+      LD: { ...base.LD, x: 0.34 },
+      RD: { ...base.RD, x: 0.34 },
+    };
   }
 
   if (neutralBoard) {
@@ -514,22 +539,44 @@ const PositionTrainerPage = () => {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
+      setIsFullscreen(
+        Boolean(
+          document.fullscreenElement ||
+            // @ts-ignore
+            document.webkitFullscreenElement
+        )
+      );
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
+    // @ts-ignore
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      // @ts-ignore
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
   }, []);
 
   const toggleFullscreen = () => {
     const board = boardRef.current;
     if (!board) return;
-    if (!document.fullscreenElement) {
-      board.requestFullscreen?.().catch(() => {
-        /* no-op: browser may block without user gesture */
-      });
+    const fsElement =
+      document.fullscreenElement ||
+      // @ts-ignore
+      document.webkitFullscreenElement;
+    if (!fsElement) {
+      const req =
+        board.requestFullscreen ||
+        // @ts-ignore
+        board.webkitRequestFullscreen;
+      req?.call(board);
     } else {
-      document.exitFullscreen?.();
+      (
+        document.exitFullscreen ||
+        // @ts-ignore
+        document.webkitExitFullscreen ||
+        (() => {})
+      )?.call(document);
     }
   };
 

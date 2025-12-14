@@ -8,7 +8,6 @@ type PlayerRow = {
   present: boolean;
   goalie: boolean;
   line: LineSlot;
-  sog: number;
   goals: number;
   assists: number;
   benchCount: number;
@@ -20,8 +19,6 @@ type PlayerRow = {
 type Scoreboard = {
   usGoals: number;
   themGoals: number;
-  usSOG: number;
-  themSOG: number;
 };
 
 const roster: { name: string; tier: Tier }[] = [
@@ -51,7 +48,7 @@ const StatsBoard = () => {
         /* ignore */
       }
     }
-    return { usGoals: 0, themGoals: 0, usSOG: 0, themSOG: 0 };
+    return { usGoals: 0, themGoals: 0 };
   });
   const [showResetModal, setShowResetModal] = useState(false);
   const [players, setPlayers] = useState<Record<string, PlayerRow>>(() => {
@@ -69,7 +66,6 @@ const StatsBoard = () => {
         present: true,
         goalie: false,
         line: "none",
-        sog: 0,
         goals: 0,
         assists: 0,
         benchCount: 0,
@@ -96,12 +92,19 @@ const StatsBoard = () => {
         ),
     [players]
   );
-  const hideBenchTurns = eligibleSkaters.length <= 8 && eligibleSkaters.length > 0;
+  const hideBenchTurns =
+    eligibleSkaters.length <= 8 && eligibleSkaters.length > 0;
 
   const suggestedBench = useMemo(() => {
-    if (!eligibleSkaters.length || eligibleSkaters.length === 8 || eligibleSkaters.length === 7)
+    if (
+      !eligibleSkaters.length ||
+      eligibleSkaters.length === 8 ||
+      eligibleSkaters.length === 7
+    )
       return [];
-    const minBenches = Math.min(...eligibleSkaters.map(([, p]) => p.benchCount));
+    const minBenches = Math.min(
+      ...eligibleSkaters.map(([, p]) => p.benchCount)
+    );
     return eligibleSkaters
       .filter(([, p]) => p.benchCount === minBenches)
       .map(([name]) => name);
@@ -111,7 +114,8 @@ const StatsBoard = () => {
     const skaterCount = eligibleSkaters.length;
     if (skaterCount === 0 || skaterCount > 7 || skaterCount === 8) return [];
     const sorted = [...eligibleSkaters].sort(
-      ([, a], [, b]) => a.benchCount - b.benchCount || tierValue[a.tier] - tierValue[b.tier]
+      ([, a], [, b]) =>
+        a.benchCount - b.benchCount || tierValue[a.tier] - tierValue[b.tier]
     );
     // pick top 2 to double-shift if only 7 skaters, top 1 if 6
     const take = skaterCount >= 7 ? 2 : 1;
@@ -135,7 +139,11 @@ const StatsBoard = () => {
     setPlayers((prev) => {
       const next: Record<string, PlayerRow> = {};
       Object.entries(prev).forEach(([n, row]) => {
-        next[n] = { ...row, goalie: n === name, line: n === name ? "none" : row.line };
+        next[n] = {
+          ...row,
+          goalie: n === name,
+          line: n === name ? "none" : row.line,
+        };
       });
       return next;
     });
@@ -148,8 +156,15 @@ const StatsBoard = () => {
     }));
   };
 
-  const bump = (name: string, key: "sog" | "goals" | "assists" | "benchCount", delta: number) =>
-    setPlayer(name, (row) => ({ ...row, [key]: Math.max(0, (row as any)[key] + delta) }));
+  const bump = (
+    name: string,
+    key: "goals" | "assists" | "benchCount",
+    delta: number
+  ) =>
+    setPlayer(name, (row) => ({
+      ...row,
+      [key]: Math.max(0, (row as any)[key] + delta),
+    }));
 
   useEffect(() => {
     sessionStorage.setItem("stats_players", JSON.stringify(players));
@@ -192,10 +207,12 @@ const StatsBoard = () => {
         el.webkitRequestFullscreen;
       req?.call(el);
     } else {
-      (document.exitFullscreen ||
+      (
+        document.exitFullscreen ||
         // @ts-ignore
         document.webkitExitFullscreen ||
-        (() => {}))?.call(document);
+        (() => {})
+      )?.call(document);
     }
   };
 
@@ -209,7 +226,6 @@ const StatsBoard = () => {
         present: true,
         goalie: false,
         line: "none",
-        sog: 0,
         goals: 0,
         assists: 0,
         benchCount: 0,
@@ -219,7 +235,7 @@ const StatsBoard = () => {
       };
     });
     setPlayers(initial);
-    setScore({ usGoals: 0, themGoals: 0, usSOG: 0, themSOG: 0 });
+    setScore({ usGoals: 0, themGoals: 0 });
   };
 
   const recordAgainst = (type: "shot" | "goal") => {
@@ -231,7 +247,6 @@ const StatsBoard = () => {
     }));
     setScore((s) => ({
       ...s,
-      themSOG: s.themSOG + 1,
       themGoals: s.themGoals + (type === "goal" ? 1 : 0),
     }));
   };
@@ -243,7 +258,6 @@ const StatsBoard = () => {
     const line2: string[] = [];
     const bench: string[] = [];
 
-    
     const tierScore = (t: Tier) => tierValue[t];
 
     const lineStats = {
@@ -276,7 +290,9 @@ const StatsBoard = () => {
       const skill2 = lineStats.skillSum.line2 + tierScore(tier);
       if (tier === "top") {
         if (lineStats.topCount.line1 !== lineStats.topCount.line2) {
-          return lineStats.topCount.line1 < lineStats.topCount.line2 ? "line1" : "line2";
+          return lineStats.topCount.line1 < lineStats.topCount.line2
+            ? "line1"
+            : "line2";
         }
       }
       if (line1.length !== line2.length) {
@@ -295,7 +311,10 @@ const StatsBoard = () => {
         return;
       }
       const lineKey = chooseLine(name);
-      if ((lineKey === "line1" && line1.length >= 4) || (lineKey === "line2" && line2.length >= 4)) {
+      if (
+        (lineKey === "line1" && line1.length >= 4) ||
+        (lineKey === "line2" && line2.length >= 4)
+      ) {
         const other = lineKey === "line1" ? "line2" : "line1";
         place(name, other);
       } else {
@@ -317,7 +336,10 @@ const StatsBoard = () => {
     setPlayers((prev) => {
       const copy = { ...prev };
       Object.keys(copy).forEach((name) => {
-        copy[name] = { ...copy[name], line: copy[name].goalie ? "none" : nextLines[name] ?? "none" };
+        copy[name] = {
+          ...copy[name],
+          line: copy[name].goalie ? "none" : nextLines[name] ?? "none",
+        };
       });
       return copy;
     });
@@ -339,15 +361,24 @@ const StatsBoard = () => {
         buckets[line].push(name);
       }
     });
-    const presentNames = roster.filter((r) => players[r.name].present).map((r) => r.name);
-    const notPresent = roster.filter((r) => !players[r.name].present).map((r) => r.name);
-    buckets.none = [...buckets.none.filter((n) => presentNames.includes(n)), ...notPresent];
+    const presentNames = roster
+      .filter((r) => players[r.name].present)
+      .map((r) => r.name);
+    const notPresent = roster
+      .filter((r) => !players[r.name].present)
+      .map((r) => r.name);
+    buckets.none = [
+      ...buckets.none.filter((n) => presentNames.includes(n)),
+      ...notPresent,
+    ];
     return buckets;
   }, [players]);
 
-
   return (
-    <div ref={containerRef} className={`page stats-page ${isFullscreen ? "stats-fullscreen" : ""}`}>
+    <div
+      ref={containerRef}
+      className={`page stats-page ${isFullscreen ? "stats-fullscreen" : ""}`}
+    >
       <header className="page-hero">
         {!isFullscreen && (
           <div>
@@ -362,10 +393,18 @@ const StatsBoard = () => {
           <button className="ghost" onClick={balanceLines}>
             Balance lines
           </button>
-          <button className="ghost" onClick={() => recordAgainst("shot")} disabled={!goalie}>
+          <button
+            className="ghost"
+            onClick={() => recordAgainst("shot")}
+            disabled={!goalie}
+          >
             Shot against goalie
           </button>
-          <button className="ghost" onClick={() => recordAgainst("goal")} disabled={!goalie}>
+          <button
+            className="ghost"
+            onClick={() => recordAgainst("goal")}
+            disabled={!goalie}
+          >
             Goal against goalie
           </button>
           <button
@@ -384,7 +423,9 @@ const StatsBoard = () => {
       <section className="info stats-callout">
         <div>
           <strong>Bench next:</strong>{" "}
-          {suggestedBench.length ? suggestedBench.join(", ") : "No eligible skaters"}
+          {suggestedBench.length
+            ? suggestedBench.join(", ")
+            : "No eligible skaters"}
         </div>
         <div>
           <strong>Goalie:</strong> {goalie ?? "None set"}
@@ -400,18 +441,23 @@ const StatsBoard = () => {
             <span className="score-num">{score.usGoals}</span>
             <span className="score-abbr">G</span>
             <div className="score-mini-btns">
-              <button onClick={() => setScore((s) => ({ ...s, usGoals: Math.max(0, s.usGoals - 1) }))}>
+              <button
+                onClick={() =>
+                  setScore((s) => ({
+                    ...s,
+                    usGoals: Math.max(0, s.usGoals - 1),
+                  }))
+                }
+              >
                 -
               </button>
-              <button onClick={() => setScore((s) => ({ ...s, usGoals: s.usGoals + 1 }))}>+</button>
-            </div>
-            <span className="score-num">{score.usSOG}</span>
-            <span className="score-abbr">S</span>
-            <div className="score-mini-btns">
-              <button onClick={() => setScore((s) => ({ ...s, usSOG: Math.max(0, s.usSOG - 1) }))}>
-                -
+              <button
+                onClick={() =>
+                  setScore((s) => ({ ...s, usGoals: s.usGoals + 1 }))
+                }
+              >
+                +
               </button>
-              <button onClick={() => setScore((s) => ({ ...s, usSOG: s.usSOG + 1 }))}>+</button>
             </div>
           </div>
           <div className="score-chip">
@@ -419,18 +465,23 @@ const StatsBoard = () => {
             <span className="score-num">{score.themGoals}</span>
             <span className="score-abbr">G</span>
             <div className="score-mini-btns">
-              <button onClick={() => setScore((s) => ({ ...s, themGoals: Math.max(0, s.themGoals - 1) }))}>
+              <button
+                onClick={() =>
+                  setScore((s) => ({
+                    ...s,
+                    themGoals: Math.max(0, s.themGoals - 1),
+                  }))
+                }
+              >
                 -
               </button>
-              <button onClick={() => setScore((s) => ({ ...s, themGoals: s.themGoals + 1 }))}>+</button>
-            </div>
-            <span className="score-num">{score.themSOG}</span>
-            <span className="score-abbr">S</span>
-            <div className="score-mini-btns">
-              <button onClick={() => setScore((s) => ({ ...s, themSOG: Math.max(0, s.themSOG - 1) }))}>
-                -
+              <button
+                onClick={() =>
+                  setScore((s) => ({ ...s, themGoals: s.themGoals + 1 }))
+                }
+              >
+                +
               </button>
-              <button onClick={() => setScore((s) => ({ ...s, themSOG: s.themSOG + 1 }))}>+</button>
             </div>
           </div>
         </div>
@@ -443,7 +494,6 @@ const StatsBoard = () => {
           <span>Goalie</span>
           <span>Line</span>
           {!hideBenchTurns && <span>Bench turns</span>}
-          <span>SOG</span>
           <span>G</span>
           <span>A</span>
           <span>GA/SvA</span>
@@ -476,7 +526,11 @@ const StatsBoard = () => {
                   <div key={name} className="stats-row">
                     <span className="stats-name">{name}</span>
                     <span>
-                      <input type="checkbox" checked={row.present} onChange={() => togglePresent(name)} />
+                      <input
+                        type="checkbox"
+                        checked={row.present}
+                        onChange={() => togglePresent(name)}
+                      />
                     </span>
                     <span>
                       <input
@@ -490,7 +544,9 @@ const StatsBoard = () => {
                     <span>
                       <select
                         value={row.line}
-                        onChange={(e) => setLine(name, e.target.value as LineSlot)}
+                        onChange={(e) =>
+                          setLine(name, e.target.value as LineSlot)
+                        }
                         disabled={!row.present || row.goalie}
                       >
                         <option value="none">None</option>
@@ -501,33 +557,39 @@ const StatsBoard = () => {
                     </span>
                     {!hideBenchTurns && (
                       <span className="counter">
-                        <button onClick={() => bump(name, "benchCount", -1)} disabled={row.benchCount === 0}>
+                        <button
+                          onClick={() => bump(name, "benchCount", -1)}
+                          disabled={row.benchCount === 0}
+                        >
                           -
                         </button>
                         <span>{row.benchCount}</span>
-                        <button onClick={() => bump(name, "benchCount", 1)}>+ Bench</button>
+                        <button onClick={() => bump(name, "benchCount", 1)}>
+                          + Bench
+                        </button>
                       </span>
                     )}
                     <span className="counter">
-                      <button onClick={() => bump(name, "sog", -1)} disabled={row.sog === 0}>
-                        -
-                      </button>
-                      <span>{row.sog}</span>
-                      <button onClick={() => bump(name, "sog", 1)}>+</button>
-                    </span>
-                    <span className="counter">
-                      <button onClick={() => bump(name, "goals", -1)} disabled={row.goals === 0}>
+                      <button
+                        onClick={() => bump(name, "goals", -1)}
+                        disabled={row.goals === 0}
+                      >
                         -
                       </button>
                       <span>{row.goals}</span>
                       <button onClick={() => bump(name, "goals", 1)}>+</button>
                     </span>
                     <span className="counter">
-                      <button onClick={() => bump(name, "assists", -1)} disabled={row.assists === 0}>
+                      <button
+                        onClick={() => bump(name, "assists", -1)}
+                        disabled={row.assists === 0}
+                      >
                         -
                       </button>
                       <span>{row.assists}</span>
-                      <button onClick={() => bump(name, "assists", 1)}>+</button>
+                      <button onClick={() => bump(name, "assists", 1)}>
+                        +
+                      </button>
                     </span>
                     <span className="goalie-stats">
                       <span>{row.goalsAgainst} GA</span>
@@ -545,9 +607,15 @@ const StatsBoard = () => {
         <div className="modal-backdrop">
           <div className="modal">
             <h3>Reset all data?</h3>
-            <p>This will clear attendance, lines, stats, and the scoreboard for this session.</p>
+            <p>
+              This will clear attendance, lines, stats, and the scoreboard for
+              this session.
+            </p>
             <div className="modal-actions">
-              <button className="ghost" onClick={() => setShowResetModal(false)}>
+              <button
+                className="ghost"
+                onClick={() => setShowResetModal(false)}
+              >
                 Cancel
               </button>
               <button className="ghost danger" onClick={resetAll}>
