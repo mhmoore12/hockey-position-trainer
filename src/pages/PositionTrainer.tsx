@@ -99,8 +99,8 @@ const strategyForLeftTeam = (
     const chasing: PlayerRole = nearTop ? "LW" : "RW";
     const supportWing: PlayerRole = chasing === "LW" ? "RW" : "LW";
     const netFront: Position = { x: 0.9, y: 0.5 };
-    const strongX = 0.7;
-    const weakX = 0.62;
+    const strongX = 0.66;
+    const weakX = 0.58;
     const strongSide: PlayerRole = nearTop ? "LD" : "RD";
     const weakSide: PlayerRole = strongSide === "LD" ? "RD" : "LD";
     const nearNet = puckTarget.x > 0.88 && Math.abs(puckTarget.y - 0.5) < 0.2;
@@ -121,8 +121,8 @@ const strategyForLeftTeam = (
           y: clamp(puck.y, 0.1, 0.9),
         },
         [offWing]: { x: wingEntryX - 0.05, y: 0.5 },
-        LD: { x: wingEntryX - 0.1, y: wingHighLane },
-        RD: { x: wingEntryX - 0.1, y: wingLowLane },
+        LD: { x: wingEntryX - 0.15, y: wingHighLane },
+        RD: { x: wingEntryX - 0.15, y: wingLowLane },
       };
     }
 
@@ -170,8 +170,8 @@ const strategyForLeftTeam = (
   const primaryDefense: PlayerRole = nearTop ? "LD" : "RD";
   const secondaryDefense: PlayerRole = primaryDefense === "LD" ? "RD" : "LD";
   const engageSpot: Position = {
-    x: clamp(puck.x + 0.03, 0.08, 0.3),
-    y: clamp(puck.y, 0.12, 0.88),
+    x: clamp(puck.x - 0.02, 0.1, 0.22),
+    y: clamp(puck.y * 0.9 + 0.05, 0.1, 0.82),
   };
 
   const secondarySpot: Position = corner
@@ -181,14 +181,15 @@ const strategyForLeftTeam = (
       }
     : { x: 0.12, y: 0.5 };
   const wingCenterY = clamp(puck.y, 0.15, 0.85);
-  const wingOffset = 0.14;
+  const wingOffset = 0.18;
+  const wingX = 0.36;
 
   return {
     ...base,
     [primaryDefense]: engageSpot,
     [secondaryDefense]: secondarySpot,
-    LW: { x: 0.3, y: clamp(wingCenterY - wingOffset, 0.12, 0.88) },
-    RW: { x: 0.3, y: clamp(wingCenterY + wingOffset, 0.12, 0.88) },
+    LW: { x: wingX, y: clamp(wingCenterY - wingOffset, 0.12, 0.88) },
+    RW: { x: wingX, y: clamp(wingCenterY + wingOffset, 0.12, 0.88) },
   };
 };
 
@@ -215,8 +216,20 @@ const getTeamPositions = (
   }));
 };
 
-const goaliePosition = (side: TeamSide, puck: Position): Position => {
-  const baseX = side === "left" ? 0.061 : 0.939;
+const goaliePosition = (
+  side: TeamSide,
+  puck: Position,
+  isFullscreen: boolean
+): Position => {
+  // Crease centers in the SVG are at ~120px and 1280px of 1400px viewBox.
+  // In fullscreen we inset further to counter any scaling/padding differences.
+  const baseX = isFullscreen
+    ? side === "left"
+      ? 0.12
+      : 0.88
+    : side === "left"
+    ? 0.086
+    : 0.914;
   const y = clamp(puck.y, 0.43, 0.57);
   return {
     x: baseX,
@@ -405,23 +418,19 @@ const RinkGraphic = () => (
       strokeWidth="6"
       opacity="0.7"
     />
-    <circle
-      cx="120"
-      cy="500"
-      r="24"
-      fill="none"
+    <path
+      d="M120 452 A72 72 0 0 1 120 548 L120 452 Z"
+      fill="rgba(52, 152, 219, 0.2)"
       stroke="#1d4ed8"
       strokeWidth="4"
-      opacity="0.6"
+      opacity="0.8"
     />
-    <circle
-      cx="1280"
-      cy="500"
-      r="24"
-      fill="none"
+    <path
+      d="M1280 452 A72 72 0 0 0 1280 548 L1280 452 Z"
+      fill="rgba(52, 152, 219, 0.2)"
       stroke="#1d4ed8"
       strokeWidth="4"
-      opacity="0.6"
+      opacity="0.8"
     />
   </svg>
 );
@@ -430,6 +439,8 @@ const PositionTrainerPage = () => {
   const [puck, setPuck] = useState<Position>(defaultPuck);
   const [isDragging, setIsDragging] = useState(false);
   const [faceoffWing, setFaceoffWing] = useState<FaceoffWing>("LW");
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const boardRef = useRef<HTMLDivElement | null>(null);
   const rinkRef = useRef<HTMLDivElement | null>(null);
 
   const home = useMemo(
@@ -440,8 +451,14 @@ const PositionTrainerPage = () => {
     () => getTeamPositions("right", puck, faceoffWing),
     [puck, faceoffWing]
   );
-  const homeGoalie = useMemo(() => goaliePosition("left", puck), [puck]);
-  const awayGoalie = useMemo(() => goaliePosition("right", puck), [puck]);
+  const homeGoalie = useMemo(
+    () => goaliePosition("left", puck, isFullscreen),
+    [puck, isFullscreen]
+  );
+  const awayGoalie = useMemo(
+    () => goaliePosition("right", puck, isFullscreen),
+    [puck, isFullscreen]
+  );
   const greenNarrative = useMemo(
     () => getNarrative("left", puck, faceoffWing),
     [puck, faceoffWing]
@@ -457,12 +474,34 @@ const PositionTrainerPage = () => {
     return () => window.removeEventListener("pointerup", handleUp);
   }, []);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    const board = boardRef.current;
+    if (!board) return;
+    if (!document.fullscreenElement) {
+      board.requestFullscreen?.().catch(() => {
+        /* no-op: browser may block without user gesture */
+      });
+    } else {
+      document.exitFullscreen?.();
+    }
+  };
+
   const updatePuckFromPointer = (clientX: number, clientY: number) => {
     const rink = rinkRef.current;
     if (!rink) return;
     const rect = rink.getBoundingClientRect();
-    const x = clamp((clientX - rect.left) / rect.width, 0.02, 0.98);
-    const y = clamp((clientY - rect.top) / rect.height, 0.04, 0.96);
+    const inset = isFullscreen ? 0.09 : 0.06;
+    const x = clamp((clientX - rect.left) / rect.width, inset, 1 - inset);
+    const y = clamp((clientY - rect.top) / rect.height, inset, 1 - inset);
     setPuck({ x, y });
   };
 
@@ -495,6 +534,13 @@ const PositionTrainerPage = () => {
             }}
           >
             Reset
+          </button>
+          <button
+            className={`ghost ${isFullscreen ? "ghost-on" : ""}`}
+            onClick={toggleFullscreen}
+            aria-pressed={isFullscreen}
+          >
+            {isFullscreen ? "Exit fullscreen" : "Fullscreen"}
           </button>
         </div>
       </header>
@@ -544,10 +590,13 @@ const PositionTrainerPage = () => {
           </ul>
         </section>
 
-        <section className="board-panel">
+        <section
+          ref={boardRef}
+          className={`board-panel ${isFullscreen ? "board-panel-fullscreen" : ""}`}
+        >
           <div
             ref={rinkRef}
-            className="rink"
+            className={`rink ${isFullscreen ? "rink-fullscreen" : ""}`}
             onPointerMove={(e) =>
               isDragging && updatePuckFromPointer(e.clientX, e.clientY)
             }
