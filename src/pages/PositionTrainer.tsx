@@ -60,6 +60,12 @@ const strategyForLeftTeam = (
     !inOffense && !inDefense && (puck.y < 0.33 || puck.y > 0.67);
 
   if (!inOffense && !inDefense && !neutralBoard) {
+    const nearCenterFaceoff =
+      Math.abs(puck.x - 0.5) < 0.02 && Math.abs(puck.y - 0.5) < 0.06;
+    if (nearCenterFaceoff) {
+      return base;
+    }
+
     const puckSideWing: PlayerRole = nearTop ? "LW" : "RW";
     const supportWing: PlayerRole = puckSideWing === "LW" ? "RW" : "LW";
     const isRightLane = puck.y >= 0.5;
