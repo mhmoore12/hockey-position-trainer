@@ -171,6 +171,12 @@
   color: #d7e3f4;
 }
 
+.control-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 select {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -252,6 +258,43 @@ select {
   justify-content: center;
 }
 
+.floating-undo {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1000;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(7, 18, 36, 0.75);
+  color: #f7fbff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+.floating-undo:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.floating-reset {
+  position: absolute;
+  right: 20px;
+  bottom: 72px;
+  z-index: 1000;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.9);
+  color: #0d1b2a;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
 .rink {
   position: relative;
   width: 100%;
@@ -302,6 +345,261 @@ select {
   pointer-events: none;
 }
 
+.movement-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.movement-line {
+  stroke: #b8c6d8;
+  stroke-width: 1;
+  stroke-dasharray: 12 12;
+  opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.movement-line-home {
+  stroke: rgba(47, 158, 68, 0.6);
+}
+
+.movement-line-away {
+  stroke: rgba(224, 49, 49, 0.6);
+}
+
+.movement-dot {
+  opacity: 0.9;
+  vector-effect: non-scaling-stroke;
+}
+
+.movement-dot-home {
+  fill: rgba(47, 158, 68, 0.18);
+  stroke: rgba(47, 158, 68, 0.65);
+  stroke-width: 2;
+}
+
+.movement-dot-away {
+  fill: rgba(224, 49, 49, 0.18);
+  stroke: rgba(224, 49, 49, 0.65);
+  stroke-width: 2;
+}
+
+.movement-label {
+  fill: rgba(180, 194, 210, 0.9);
+  font-size: 32px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+  letter-spacing: 0.04em;
+}
+
+/* Stats board */
+.stats-page .stats-table {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.6fr 0.7fr 1fr 1.4fr 1fr 0.8fr 0.8fr 1.2fr;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  gap: 0.4rem;
+}
+
+.stats-head {
+  background: transparent;
+  border: none;
+  padding-bottom: 0.2rem;
+  color: #d7e3f4;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.stats-name {
+  font-weight: 800;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.counter button {
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7fbff;
+  cursor: pointer;
+}
+
+.counter span {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.stats-table select {
+  min-width: 110px;
+}
+
+.goalie-stats {
+  display: inline-flex;
+  gap: 0.35rem;
+  color: #d7e3f4;
+}
+
+.stats-callout {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  }
+
+.stats-group-title {
+  margin: 0.5rem 0 0.2rem;
+  font-weight: 800;
+  color: #d7e3f4;
+  letter-spacing: 0.02em;
+}
+
+.stats-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: #0b1628;
+  overflow-y: auto;
+  padding: 0.5rem 0.75rem 1rem;
+}
+
+.stats-fullscreen .stats-table {
+  position: relative;
+  z-index: 1;
+}
+
+@media (pointer: coarse) {
+  .controls button,
+  .counter button,
+  .score-mini-btns button,
+  .floating-undo,
+  .floating-reset,
+  .ghost {
+    min-height: 44px;
+    padding: 0.55rem 0.9rem;
+    font-size: 1rem;
+  }
+  .stats-row {
+    gap: 0.6rem;
+  }
+  .score-chip {
+    gap: 0.4rem;
+    padding: 0.35rem 0.5rem;
+  }
+  select,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 40px;
+  }
+}
+
+.scoreboard.inline-score {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.score-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+
+.score-label {
+  font-weight: 800;
+  color: #d7e3f4;
+  letter-spacing: 0.02em;
+}
+
+.score-num {
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.score-abbr {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.score-mini-btns {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.score-mini-btns button {
+  padding: 0.18rem 0.25rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f7fbff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+}
+
+.modal {
+  background: #0f1c33;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  max-width: 420px;
+  width: 90%;
+  color: #d7e3f4;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal h3 {
+  margin: 0 0 0.4rem;
+}
+
+.modal p {
+  margin: 0 0 0.8rem;
+  color: #c3d0e5;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.ghost.danger {
+  border-color: rgba(224, 49, 49, 0.6);
+  color: #ff6b6b;
+}
+
 .player {
   position: absolute;
   width: 46px;
@@ -316,6 +614,7 @@ select {
   transform: translate(-50%, -50%);
   box-shadow: 0 6px 18px var(--shadow);
   transition: left 600ms ease, top 600ms ease;
+  z-index: 2;
 }
 
 .puck {

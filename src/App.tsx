@@ -9,6 +9,7 @@ const nav = [
   },
   { key: "wrist", label: "Wrist shot" },
   { key: "sticks", label: "Sticks" },
+  { key: "stats", label: "Game stats" },
 ] as const;
 
 function App() {
@@ -54,7 +55,7 @@ function App() {
               to={
                 item.key === "trainer"
                   ? "/"
-                  : `/${item.key === "sticks" ? "sticks" : "wrist"}`
+                  : `/${item.key}`
               }
               className={({ isActive }) =>
                 `nav-button ${isActive ? "nav-button-active" : ""}`

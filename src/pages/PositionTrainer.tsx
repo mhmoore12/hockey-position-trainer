@@ -106,6 +106,8 @@ const strategyForLeftTeam = (
     const nearNet = puckTarget.x > 0.88 && Math.abs(puckTarget.y - 0.5) < 0.2;
 
     const entering = puck.x >= 0.55 && puck.x <= 0.72;
+    const lowPuck = puckTarget.x > 0.88 || puckTarget.y < 0.2 || puckTarget.y > 0.8;
+    const cornerPuck = puckTarget.x > 0.9 && (puckTarget.y < 0.22 || puckTarget.y > 0.78);
 
     if (entering) {
       const wingHighLane = 0.3;
@@ -150,14 +152,17 @@ const strategyForLeftTeam = (
       ...base,
       [chasing]: mix(
         base[chasing],
-        { x: puckTarget.x - 0.015, y: puckTarget.y },
-        0.9
+        {
+          x: clamp(puckTarget.x, 0, 1),
+          y: puckTarget.y,
+        },
+        cornerPuck ? 0.98 : lowPuck ? 0.97 : 0.95
       ),
       [supportWing]: mix(
         base[supportWing],
         {
           x: netFront.x,
-          y: mix(puckTarget, { x: puckTarget.x, y: 0.5 }, 0.35).y,
+          y: mix(puckTarget, { x: puckTarget.x, y: 0.5 }, 0.45).y,
         },
         0.9
       ),
@@ -219,21 +224,37 @@ const getTeamPositions = (
 const goaliePosition = (
   side: TeamSide,
   puck: Position,
-  isFullscreen: boolean
+  _isFullscreen: boolean
 ): Position => {
-  // Crease centers in the SVG are at ~120px and 1280px of 1400px viewBox.
-  // In fullscreen we inset further to counter any scaling/padding differences.
-  const baseX = isFullscreen
-    ? side === "left"
-      ? 0.12
-      : 0.88
-    : side === "left"
-    ? 0.086
-    : 0.914;
-  const y = clamp(puck.y, 0.43, 0.57);
+  // Crease centers for the SVG (viewBox 1400 x 1000)
+  const centerX = side === "left" ? 103 / 1400 : 1315 / 1400;
+  const centerY = 0.5;
+  const radiusX = 72 / 1400; // horizontal radius
+  const radiusY = 72 / 1000; // vertical radius
+
+  // If puck is at/behind goal line, pin goalie to goal line segment
+  const puckIsBehindGoal =
+    (side === "left" && puck.x <= centerX + 0.01) ||
+    (side === "right" && puck.x >= centerX - 0.01);
+  if (puckIsBehindGoal) {
+    return {
+      x: centerX,
+      y: clamp(puck.y, centerY - radiusY, centerY + radiusY),
+    };
+  }
+
+  // Project puck direction onto the crease semi-circle
+  const dx = (puck.x - centerX) * (side === "left" ? 1 : -1); // mirror for right
+  const dy = puck.y - centerY;
+  const angle = Math.atan2(dy, dx || 1e-5); // avoid zero
+  // Keep angle within front-facing half-circle (-pi/2 to pi/2)
+  const clampedAngle = clamp(angle, -Math.PI / 2, Math.PI / 2);
+  const arcX = centerX + Math.cos(clampedAngle) * radiusX * (side === "left" ? 1 : -1);
+  const arcY = centerY + Math.sin(clampedAngle) * radiusY;
+
   return {
-    x: baseX,
-    y,
+    x: arcX,
+    y: arcY,
   };
 };
 
@@ -419,14 +440,14 @@ const RinkGraphic = () => (
       opacity="0.7"
     />
     <path
-      d="M120 452 A72 72 0 0 1 120 548 L120 452 Z"
+      d="M103 428 A72 72 0 0 1 103 572 L103 428 Z"
       fill="rgba(52, 152, 219, 0.2)"
       stroke="#1d4ed8"
       strokeWidth="4"
       opacity="0.8"
     />
     <path
-      d="M1280 452 A72 72 0 0 0 1280 548 L1280 452 Z"
+      d="M1315 428 A72 72 0 0 0 1315 572 L1315 428 Z"
       fill="rgba(52, 152, 219, 0.2)"
       stroke="#1d4ed8"
       strokeWidth="4"
@@ -440,8 +461,17 @@ const PositionTrainerPage = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [faceoffWing, setFaceoffWing] = useState<FaceoffWing>("LW");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showPast, setShowPast] = useState(true);
+  const [history, setHistory] = useState<
+    { puck: Position; faceoffWing: FaceoffWing }[]
+  >([]);
+  const [previousPlayers, setPreviousPlayers] = useState<{
+    home: PlayerState[];
+    away: PlayerState[];
+  } | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const rinkRef = useRef<HTMLDivElement | null>(null);
+  const dragSnapshotTaken = useRef(false);
 
   const home = useMemo(
     () => getTeamPositions("left", puck, faceoffWing),
@@ -470,9 +500,17 @@ const PositionTrainerPage = () => {
 
   useEffect(() => {
     const handleUp = () => setIsDragging(false);
+    const resetDragSnapshot = () => {
+      dragSnapshotTaken.current = false;
+    };
     window.addEventListener("pointerup", handleUp);
-    return () => window.removeEventListener("pointerup", handleUp);
+    window.addEventListener("pointerup", resetDragSnapshot);
+    return () => {
+      window.removeEventListener("pointerup", handleUp);
+      window.removeEventListener("pointerup", resetDragSnapshot);
+    };
   }, []);
+
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -505,6 +543,43 @@ const PositionTrainerPage = () => {
     setPuck({ x, y });
   };
 
+  const pushSnapshot = () => {
+    // Capture current player locations for trail start points
+    setPreviousPlayers({
+      home: home.map((p) => ({ ...p, pos: { ...p.pos } })),
+      away: away.map((p) => ({ ...p, pos: { ...p.pos } })),
+    });
+    setHistory((prev) => [...prev, { puck, faceoffWing }]);
+  };
+
+  const handleUndo = () => {
+    setHistory((prev) => {
+      if (!prev.length) return prev;
+      const target = prev[prev.length - 1];
+      setPreviousPlayers(null);
+      setPuck(target.puck);
+      setFaceoffWing(target.faceoffWing);
+      return prev.slice(0, -1);
+    });
+  };
+
+  const prevHome = useMemo(() => {
+    if (!previousPlayers || !showPast) return null;
+    return previousPlayers.home;
+  }, [previousPlayers, showPast]);
+  const prevAway = useMemo(() => {
+    if (!previousPlayers || !showPast) return null;
+    return previousPlayers.away;
+  }, [previousPlayers, showPast]);
+  const prevHomeMap = useMemo(() => {
+    if (!prevHome) return null;
+    return Object.fromEntries(prevHome.map((p) => [p.role, p.pos]));
+  }, [prevHome]);
+  const prevAwayMap = useMemo(() => {
+    if (!prevAway) return null;
+    return Object.fromEntries(prevAway.map((p) => [p.role, p.pos]));
+  }, [prevAway]);
+
   return (
     <div className="page position-page">
       <header className="page-hero">
@@ -521,7 +596,10 @@ const PositionTrainerPage = () => {
             Faceoff taker
             <select
               value={faceoffWing}
-              onChange={(e) => setFaceoffWing(e.target.value as FaceoffWing)}
+              onChange={(e) => {
+                pushSnapshot();
+                setFaceoffWing(e.target.value as FaceoffWing);
+              }}
             >
               <option value="LW">Left Wing</option>
               <option value="RW">Right Wing</option>
@@ -530,11 +608,28 @@ const PositionTrainerPage = () => {
           <button
             className="ghost"
             onClick={() => {
+              setHistory([]);
+              setPreviousPlayers(null);
               setPuck(defaultPuck);
             }}
           >
             Reset
           </button>
+          <button
+            className="ghost"
+            onClick={handleUndo}
+            disabled={history.length === 0}
+          >
+            Undo
+          </button>
+          <label className="control control-inline">
+            <input
+              type="checkbox"
+              checked={showPast}
+              onChange={(e) => setShowPast(e.target.checked)}
+            />
+            Show Past Positions
+          </label>
           <button
             className={`ghost ${isFullscreen ? "ghost-on" : ""}`}
             onClick={toggleFullscreen}
@@ -594,6 +689,27 @@ const PositionTrainerPage = () => {
           ref={boardRef}
           className={`board-panel ${isFullscreen ? "board-panel-fullscreen" : ""}`}
         >
+          {isFullscreen && showPast && (
+            <>
+              <button
+                className="floating-undo"
+                onClick={handleUndo}
+                disabled={history.length === 0}
+              >
+                Undo
+              </button>
+              <button
+                className="floating-reset"
+                onClick={() => {
+                  setHistory([]);
+                  setPreviousPlayers(null);
+                  setPuck(defaultPuck);
+                }}
+              >
+                Reset
+              </button>
+            </>
+          )}
           <div
             ref={rinkRef}
             className={`rink ${isFullscreen ? "rink-fullscreen" : ""}`}
@@ -601,16 +717,88 @@ const PositionTrainerPage = () => {
               isDragging && updatePuckFromPointer(e.clientX, e.clientY)
             }
             onPointerDown={(e) => {
+              if (!dragSnapshotTaken.current) {
+                pushSnapshot();
+                dragSnapshotTaken.current = true;
+              }
               updatePuckFromPointer(e.clientX, e.clientY);
               setIsDragging(true);
             }}
           >
             <RinkGraphic />
+            {showPast && !isDragging && prevHomeMap && prevAwayMap && (
+              <svg
+                className="movement-layer"
+                viewBox="0 0 1400 1000"
+                preserveAspectRatio="xMidYMid meet"
+              >
+                {home.map((p) => {
+                  const prev = prevHomeMap[p.role];
+                  if (!prev) return null;
+                  return (
+                    <g key={`home-move-${p.role}`}>
+                      <line
+                        x1={prev.x * 1400}
+                        y1={prev.y * 1000}
+                        x2={p.pos.x * 1400}
+                        y2={p.pos.y * 1000}
+                        className="movement-line movement-line-home"
+                      />
+                      <circle
+                        cx={prev.x * 1400}
+                        cy={prev.y * 1000}
+                        r="34"
+                        className="movement-dot movement-dot-home"
+                      />
+                      <text
+                        x={prev.x * 1400}
+                        y={prev.y * 1000}
+                        className="movement-label"
+                      >
+                        {p.role}
+                      </text>
+                    </g>
+                  );
+                })}
+                {away.map((p) => {
+                  const prev = prevAwayMap[p.role];
+                  if (!prev) return null;
+                  return (
+                    <g key={`away-move-${p.role}`}>
+                      <line
+                        x1={prev.x * 1400}
+                        y1={prev.y * 1000}
+                        x2={p.pos.x * 1400}
+                        y2={p.pos.y * 1000}
+                        className="movement-line movement-line-away"
+                      />
+                      <circle
+                        cx={prev.x * 1400}
+                        cy={prev.y * 1000}
+                        r="34"
+                        className="movement-dot movement-dot-away"
+                      />
+                      <text
+                        x={prev.x * 1400}
+                        y={prev.y * 1000}
+                        className="movement-label"
+                      >
+                        {p.role}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
             <div
               className={`puck ${isDragging ? "active" : ""}`}
               style={{ left: `${puck.x * 100}%`, top: `${puck.y * 100}%` }}
               onPointerDown={(e) => {
                 e.preventDefault();
+                if (!dragSnapshotTaken.current) {
+                  pushSnapshot();
+                  dragSnapshotTaken.current = true;
+                }
                 setIsDragging(true);
               }}
             />
