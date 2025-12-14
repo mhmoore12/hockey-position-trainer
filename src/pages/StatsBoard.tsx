@@ -160,18 +160,42 @@ const StatsBoard = () => {
   }, [score]);
 
   useEffect(() => {
-    const handler = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    const handler = () =>
+      setIsFullscreen(
+        Boolean(
+          document.fullscreenElement ||
+            // @ts-ignore
+            document.webkitFullscreenElement
+        )
+      );
     document.addEventListener("fullscreenchange", handler);
-    return () => document.removeEventListener("fullscreenchange", handler);
+    // @ts-ignore
+    document.addEventListener("webkitfullscreenchange", handler);
+    return () => {
+      document.removeEventListener("fullscreenchange", handler);
+      // @ts-ignore
+      document.removeEventListener("webkitfullscreenchange", handler);
+    };
   }, []);
 
   const toggleFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.();
+    const fsElement =
+      document.fullscreenElement ||
+      // @ts-ignore
+      document.webkitFullscreenElement;
+    if (!fsElement) {
+      const req =
+        el.requestFullscreen ||
+        // @ts-ignore
+        el.webkitRequestFullscreen;
+      req?.call(el);
     } else {
-      document.exitFullscreen?.();
+      (document.exitFullscreen ||
+        // @ts-ignore
+        document.webkitExitFullscreen ||
+        (() => {}))?.call(document);
     }
   };
 
