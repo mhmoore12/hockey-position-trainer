@@ -498,85 +498,89 @@ const StatsBoard = () => {
             "goalie",
             "none",
           ] as (LineSlot | "goalie")[]
-        ).map((lineKey) => (
-          <div key={lineKey}>
-            <div className="stats-group-title">
-              {lineKey === "line1"
-                ? "Line 1"
-                : lineKey === "line2"
-                ? "Line 2"
-                : lineKey === "bench"
-                ? "Bench / alternate"
-                : lineKey === "goalie"
-                ? "Goalie"
-                : "Unassigned"}
+        ).map((lineKey) =>
+          grouped[lineKey].length === 0 ? null : (
+            <div key={lineKey}>
+              <div className="stats-group-title">
+                {lineKey === "line1"
+                  ? "Line 1"
+                  : lineKey === "line2"
+                  ? "Line 2"
+                  : lineKey === "bench"
+                  ? "Bench / alternate"
+                  : lineKey === "goalie"
+                  ? "Goalie"
+                  : "Unassigned"}
+              </div>
+              {grouped[lineKey].map((name) => {
+                const row = players[name];
+                return (
+                  <div key={name} className="stats-row">
+                    <span className="stats-name">{name}</span>
+                    <span>
+                      <input type="checkbox" checked={row.present} onChange={() => togglePresent(name)} />
+                    </span>
+                    <span>
+                      <input
+                        type="radio"
+                        name="goalie"
+                        checked={row.goalie}
+                        onChange={() => setGoalie(name)}
+                        disabled={!row.present}
+                      />
+                    </span>
+                    <span>
+                      <select
+                        value={row.line}
+                        onChange={(e) => setLine(name, e.target.value as LineSlot)}
+                        disabled={!row.present || row.goalie}
+                      >
+                        <option value="none">None</option>
+                        <option value="line1">Line 1</option>
+                        <option value="line2">Line 2</option>
+                        <option value="bench">Bench</option>
+                      </select>
+                    </span>
+                    {!hideBenchTurns && (
+                      <span className="counter">
+                        <button onClick={() => bump(name, "benchCount", -1)} disabled={row.benchCount === 0}>
+                          -
+                        </button>
+                        <span>{row.benchCount}</span>
+                        <button onClick={() => bump(name, "benchCount", 1)}>+ Bench</button>
+                      </span>
+                    )}
+                    <span className="counter">
+                      <button onClick={() => bump(name, "sog", -1)} disabled={row.sog === 0}>
+                        -
+                      </button>
+                      <span>{row.sog}</span>
+                      <button onClick={() => bump(name, "sog", 1)}>+</button>
+                    </span>
+                    <span className="counter">
+                      <button onClick={() => bump(name, "goals", -1)} disabled={row.goals === 0}>
+                        -
+                      </button>
+                      <span>{row.goals}</span>
+                      <button onClick={() => bump(name, "goals", 1)}>+</button>
+                    </span>
+                    <span className="counter">
+                      <button onClick={() => bump(name, "assists", -1)} disabled={row.assists === 0}>
+                        -
+                      </button>
+                      <span>{row.assists}</span>
+                      <button onClick={() => bump(name, "assists", 1)}>+</button>
+                    </span>
+                    <span className="goalie-stats">
+                      <span>{row.goalsAgainst} GA</span>
+                      <span>{row.shotsAgainst} SA</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            {grouped[lineKey].map((name) => {
-              const row = players[name];
-              return (
-                <div key={name} className="stats-row">
-                  <span className="stats-name">{name}</span>
-                  <span>
-                    <input type="checkbox" checked={row.present} onChange={() => togglePresent(name)} />
-                  </span>
-                  <span>
-                    <input
-                      type="radio"
-                      name="goalie"
-                      checked={row.goalie}
-                      onChange={() => setGoalie(name)}
-                      disabled={!row.present}
-                    />
-                  </span>
-                  <span>
-                    <select
-                      value={row.line}
-                      onChange={(e) => setLine(name, e.target.value as LineSlot)}
-                      disabled={!row.present || row.goalie}
-                    >
-                      <option value="none">None</option>
-                      <option value="line1">Line 1</option>
-                      <option value="line2">Line 2</option>
-                      <option value="bench">Bench</option>
-                    </select>
-                  </span>
-                  <span className="counter">
-                    <button onClick={() => bump(name, "benchCount", -1)} disabled={row.benchCount === 0}>
-                      -
-                    </button>
-                    <span>{row.benchCount}</span>
-                    <button onClick={() => bump(name, "benchCount", 1)}>+ Bench</button>
-                  </span>
-                  <span className="counter">
-                    <button onClick={() => bump(name, "sog", -1)} disabled={row.sog === 0}>
-                      -
-                    </button>
-                    <span>{row.sog}</span>
-                    <button onClick={() => bump(name, "sog", 1)}>+</button>
-                  </span>
-                  <span className="counter">
-                    <button onClick={() => bump(name, "goals", -1)} disabled={row.goals === 0}>
-                      -
-                    </button>
-                    <span>{row.goals}</span>
-                    <button onClick={() => bump(name, "goals", 1)}>+</button>
-                  </span>
-                  <span className="counter">
-                    <button onClick={() => bump(name, "assists", -1)} disabled={row.assists === 0}>
-                      -
-                    </button>
-                    <span>{row.assists}</span>
-                    <button onClick={() => bump(name, "assists", 1)}>+</button>
-                  </span>
-                  <span className="goalie-stats">
-                    <span>{row.goalsAgainst} GA</span>
-                    <span>{row.shotsAgainst} SA</span>
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        ))}
+          )
+        )}
       </section>
 
       {showResetModal && (
