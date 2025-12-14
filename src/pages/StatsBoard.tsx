@@ -565,7 +565,7 @@ const StatsBoard = () => {
                         </button>
                         <span>{row.benchCount}</span>
                         <button onClick={() => bump(name, "benchCount", 1)}>
-                          + Bench
+                          + B
                         </button>
                       </span>
                     )}
