@@ -219,7 +219,7 @@ const StatsBoard = () => {
     const line2: string[] = [];
     const bench: string[] = [];
 
-    const getTier = (name: string) => players[name].tier;
+    
     const tierScore = (t: Tier) => tierValue[t];
 
     const lineStats = {
